@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec-Meter — 自分の「性能」を測ろう</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Inter:wght@400;600;700;900&display=swap');
+
+:root {
+  --c1: #FF6B6B;
+  --c2: #FFD93D;
+  --c3: #6BCB77;
+  --c4: #4D96FF;
+  --c5: #C77DFF;
+  --c6: #FF9A3C;
+  --bg: #0F0F1A;
+  --bg2: #1A1A2E;
+  --bg3: #16213E;
+  --card: #1E1E35;
+  --border: rgba(255,255,255,0.08);
+  --text: #F0F0FF;
+  --text2: #9B9BBF;
+  --text3: #5A5A7A;
+  --radius: 16px;
+  --font: 'M PLUS Rounded 1c', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG decoration */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(77,150,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -200px; left: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(199,125,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page { position: relative; z-index: 1; }
+.hidden { display: none !important; }
+
+/* ═══════════════════════════════════
+   LANDING
+═══════════════════════════════════ */
+#page-landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(77,150,255,0.15);
+  border: 1px solid rgba(77,150,255,0.3);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 12px;
+  color: #7ab8ff;
+  letter-spacing: 0.08em;
+  margin-bottom: 28px;
+  font-weight: 700;
+}
+
+.hero-title {
+  font-size: clamp(36px, 8vw, 72px);
+  font-weight: 900;
+  line-height: 1.05;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+
+.hero-title .grad {
+  background: linear-gradient(135deg, #FF6B6B, #FFD93D, #4D96FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 16px;
+  color: var(--text2);
+  max-width: 460px;
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+
+.hero-chars {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.hero-char-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: transform 0.2s;
+}
+.hero-char-chip:hover { transform: translateY(-3px); }
+.hero-char-chip .emoji { font-size: 28px; }
+.hero-char-chip .cname { font-size: 10px; color: var(--text2); font-weight: 700; letter-spacing: 0.05em; }
+
+.btn-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #4D96FF, #C77DFF);
+  color: white;
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 900;
+  padding: 18px 48px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 32px rgba(77,150,255,0.3);
+  transition: all 0.2s;
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(77,150,255,0.4); }
+.btn-start:active { transform: scale(0.97); }
+
+.landing-meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  font-size: 13px;
+  color: var(--text3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════
+   QUIZ
+═══════════════════════════════════ */
+#page-quiz {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 100px;
+}
+
+.quiz-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.quiz-logo {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.prog-wrap { flex: 1; }
+
+.prog-track {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.prog-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #4D96FF, #C77DFF);
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+.prog-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 700;
+}
+
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  background: var(--card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.cat-emoji { font-size: 24px; }
+
+.cat-info { flex: 1; }
+.cat-name { font-size: 15px; font-weight: 800; }
+.cat-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+.q-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  margin-bottom: 16px;
+}
+
+.q-num {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+
+.q-text {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+.scale-hint {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.scale-btns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.s-btn {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s-btn:hover {
+  border-color: rgba(255,255,255,0.3);
+  color: var(--text);
+  transform: scale(1.05);
+}
+
+.s-btn.sel {
+  border-width: 2px;
+  color: var(--bg);
+  transform: scale(1.08);
+}
+
+.quiz-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-back {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.btn-back:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+.btn-back:disabled { opacity: 0.2; cursor: default; }
+
+.btn-next {
+  flex: 1;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #4D96FF, #C77DFF);
+  color: white;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.15s;
+  opacity: 0.35;
+}
+.btn-next.active { opacity: 1; box-shadow: 0 4px 20px rgba(77,150,255,0.35); }
+.btn-next.active:hover { transform: translateY(-1px); }
+.btn-next:disabled { cursor: not-allowed; }
+
+/* ═══════════════════════════════════
+   RESULT
+═══════════════════════════════════ */
+#page-result {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.result-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.result-type-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  margin-bottom: 16px;
+}
+
+.char-display {
+  font-size: 96px;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+  filter: drop-shadow(0 0 30px rgba(255,255,255,0.2));
+}
+
+.type-id {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+
+.type-name {
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.type-catch {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.6;
+  max-width: 420px;
+  margin: 0 auto 24px;
+}
+
+.score-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 10px 24px;
+  margin-bottom: 32px;
+}
+
+.score-num {
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #FFD93D, #FF6B6B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.score-rank {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text2);
+}
+
+/* Radar */
+.radar-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.radar-wrap canvas { display: block; }
+
+.params-list {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.param-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.param-emoji { font-size: 18px; flex-shrink: 0; }
+.param-right { flex: 1; }
+.param-name { font-size: 12px; font-weight: 800; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.param-score { font-size: 12px; font-weight: 900; }
+.param-bar-bg {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.param-bar {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 1.2s cubic-bezier(.4,0,.2,1);
+}
+
+/* Type desc */
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.rc-label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rc-label span { font-size: 16px; }
+
+.rc-body {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.8;
+}
+
+.strong-weak {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sw-box {
+  border-radius: 10px;
+  padding: 14px;
+}
+.sw-box.strong { background: rgba(107,203,119,0.1); border: 1px solid rgba(107,203,119,0.25); }
+.sw-box.weak { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.25); }
+.sw-title { font-size: 11px; font-weight: 900; margin-bottom: 8px; }
+.sw-box.strong .sw-title { color: #6BCB77; }
+.sw-box.weak .sw-title { color: #FF6B6B; }
+.sw-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.error-box {
+  background: rgba(255,107,107,0.07);
+  border-left: 3px solid #FF6B6B;
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.error-tag { font-size: 11px; font-weight: 900; color: #FF6B6B; margin-bottom: 4px; letter-spacing: 0.05em; }
+.error-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* Compat */
+.compat-mates {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.compat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  flex: 1;
+  min-width: 140px;
+}
+.compat-chip .ce { font-size: 24px; }
+.compat-chip .cn { font-size: 12px; font-weight: 800; }
+.compat-chip .cs { font-size: 10px; color: var(--text3); }
+
+.compat-cta {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #FF6B6B, #FFD93D);
+  color: #1A1A2E;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.compat-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,107,107,0.3); }
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.btn-retry2 {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 120px;
+}
+.btn-retry2:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+/* ═══════════════════════════════════
+   COMPAT PAGE
+═══════════════════════════════════ */
+#page-compat {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text3);
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 28px;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+}
+.page-back:hover { color: var(--text2); }
+
+.compat-title {
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.compat-subtitle { font-size: 14px; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
+
+.compat-my-type {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.cmt-emoji { font-size: 40px; }
+.cmt-info .cmt-label { font-size: 11px; color: var(--text3); font-weight: 700; letter-spacing: 0.1em; }
+.cmt-info .cmt-name { font-size: 16px; font-weight: 900; }
+
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.type-select-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.type-select-card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+.type-select-card.picked { border-color: #4D96FF; background: rgba(77,150,255,0.1); }
+.tsc-emoji { font-size: 32px; margin-bottom: 6px; }
+.tsc-id { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 2px; }
+.tsc-name { font-size: 11px; font-weight: 800; color: var(--text2); line-height: 1.3; }
+
+.compat-result-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.cp-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.cp-char { text-align: center; }
+.cp-char .em { font-size: 56px; display: block; }
+.cp-char .nm { font-size: 12px; font-weight: 800; color: var(--text2); margin-top: 6px; max-width: 100px; }
+.cp-vs-text { font-size: 24px; font-weight: 900; color: var(--text3); }
+
+.cp-score-display {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.cp-pct {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.cp-label { font-size: 13px; color: var(--text2); font-weight: 700; }
+
+.cp-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.cp-bar-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cp-bar-l { text-align: right; color: var(--text2); }
+.cp-bar-r { text-align: left; color: var(--text2); }
+.cp-bar-center {
+  width: 60px;
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+}
+.cp-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.cp-dot.lit { background: #4D96FF; }
+
+.cp-comment {
+  background: var(--bg2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+
+.cp-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.cp-tag {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.placeholder-panel {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-size: 14px;
+  font-weight: 700;
+}
+.placeholder-panel .ph-emoji { font-size: 48px; margin-bottom: 12px; display: block; }
+
+/* ═══════════════════════════════════
+   TYPE LIST PAGE
+═══════════════════════════════════ */
+#page-types {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.type-card-full {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.type-card-full:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
+.type-card-full.mine { border-color: #4D96FF; background: rgba(77,150,255,0.08); }
+.tcf-emoji { font-size: 40px; margin-bottom: 8px; display: block; }
+.tcf-id { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 4px; }
+.tcf-name { font-size: 13px; font-weight: 900; margin-bottom: 6px; line-height: 1.3; }
+.tcf-catch { font-size: 11px; color: var(--text3); line-height: 1.5; }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-in { animation: fadeUp 0.4s ease both; }
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.anim-pop { animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1) both; }
+
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Floating confetti effect */
+.confetti-wrap {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+.conf {
+  position: absolute;
+  top: -20px;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 36px; }
+  .strong-weak { grid-template-columns: 1fr; }
+  .radar-section { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- CONFETTI -->
+<div class="confetti-wrap" id="confetti" style="display:none"></div>
+
+<!-- ═══ PAGE: LANDING ═══ -->
+<div id="page-landing" class="page">
+  <div class="hero-badge">✨ 無料・登録不要・24問で完了</div>
+  <h1 class="hero-title">
+    自分の「性能」を、<br><span class="grad">数値で見ろ。</span>
+  </h1>
+  <p class="hero-sub">
+    MBTIが「どんな人か」を語るなら、<br>
+    Spec-Meterは「何がどれくらいできるか」を測る。<br>
+    あなたはどのタイプ？
+  </p>
+  <div class="hero-chars" id="hero-chars"></div>
+  <button class="btn-start" onclick="startQuiz()">
+    ⚡ 診断スタート！
+  </button>
+  <div class="landing-meta">
+    <span>📋 24問</span>
+    <span>⏱ 約3分</span>
+    <span>🎮 12タイプ</span>
+    <span>💯 相性診断つき</span>
+  </div>
+</div>
+
+<!-- ═══ PAGE: QUIZ ═══ -->
+<div id="page-quiz" class="page hidden">
+  <div class="quiz-top">
+    <div class="quiz-logo">SPEC-METER</div>
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-label">
+        <span id="prog-q">Q1 / 24</span>
+        <span id="prog-pct">0%</span>
+      </div>
+    </div>
+  </div>
+  <div id="quiz-body"></div>
+  <div class="quiz-nav">
+    <button class="btn-back" id="btn-back" onclick="goBack()" disabled>←</button>
+    <button class="btn-next" id="btn-next" onclick="goNext()" disabled>次の質問へ →</button>
+  </div>
+</div>
+
+<!-- ═══ PAGE: RESULT ═══ -->
+<div id="page-result" class="page hidden"></div>
+
+<!-- ═══ PAGE: COMPAT ═══ -->
+<div id="page-compat" class="page hidden"></div>
+
+<!-- ═══ PAGE: TYPES ═══ -->
+<div id="page-types" class="page hidden"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+
+const PARAMS = [
+  { key:'brain',  emoji:'🧠', name:'脳のスペック',  desc:'情報処理・思考の速さと正確さ', color:'#4D96FF' },
+  { key:'stamina',emoji:'💪', name:'フィジカル',     desc:'体力・行動力・タフネス',        color:'#FF6B6B' },
+  { key:'flex',   emoji:'🔄', name:'適応力',         desc:'変化・新環境への柔軟さ',        color:'#6BCB77' },
+  { key:'social', emoji:'💬', name:'コミュ力',       desc:'人との繋がり・共感・気配り',    color:'#C77DFF' },
+  { key:'drive',  emoji:'🚀', name:'行動欲',         desc:'やる気・初動の速さ・向上心',    color:'#FFD93D' },
+  { key:'rules',  emoji:'📐', name:'自己管理',       desc:'ルール・時間・お金の管理力',    color:'#FF9A3C' },
+];
+
+const QUESTIONS = [
+  // 脳のスペック
+  { p:'brain', q:'友達に「あのYouTuber知ってる？」って聞かれたとき、大体もう知ってる。' },
+  { p:'brain', q:'複数のことを同時に進めながらも、どれも放置せずにちゃんと回せる。' },
+  { p:'brain', q:'新しいゲームやアプリのルール、説明書読まなくてもすぐ把握できる。' },
+  { p:'brain', q:'話の要点を素早くまとめて、相手に伝えるのが得意な方だ。' },
+  // フィジカル
+  { p:'stamina', q:'朝から夜まで動き回っても、「もう無理…」ってならずに最後まで戦える。' },
+  { p:'stamina', q:'少し寝不足でも翌日「まあなんとかなるか」で乗り越えられる。' },
+  { p:'stamina', q:'締切ギリギリの徹夜作業、体力的には普通にこなせる方だ。' },
+  { p:'stamina', q:'風邪を引いたり体調を崩すことが、周りと比べて少ない気がする。' },
+  // 適応力
+  { p:'flex', q:'新しいアプリやサービスが出たら、とりあえず試してみるタイプ。' },
+  { p:'flex', q:'今まで自分が「正しい」と思ってたやり方を、もっといい方法があると知ったらすぐ変えられる。' },
+  { p:'flex', q:'知らない人たちのグループに突然入っても、わりとすぐなじめる。' },
+  { p:'flex', q:'旅行や生活環境が変わっても、1〜2日で「まあこれはこれで」ってなれる。' },
+  // コミュ力
+  { p:'social', q:'友達の「なんか最近元気なさそう」に、誰よりも早く気づける方だ。' },
+  { p:'social', q:'グループのLINEが荒れそうになったとき、うまくまとめられる。' },
+  { p:'social', q:'初対面の人との会話、特に緊張もせずに普通に楽しめる。' },
+  { p:'social', q:'友達のためなら、自分の予定をちょっと変えることに躊躇ない。' },
+  // 行動欲
+  { p:'drive', q:'「やりたい！」と思ったことは、次の日には調べ始めてる。' },
+  { p:'drive', q:'「今から行く？」って急に言われたとき、わりとすぐ「いいよ」って言える。' },
+  { p:'drive', q:'自分の今の状況に「このままじゃ終われない」みたいな気持ちがある。' },
+  { p:'drive', q:'面倒くさいタスクも「さっさと終わらせよう」って動き出せる方だ。' },
+  // 自己管理
+  { p:'rules', q:'待ち合わせの時間に遅刻することは、ほぼない。' },
+  { p:'rules', q:'お金の使い方、なんとなくじゃなくて把握できてる方だ。' },
+  { p:'rules', q:'やるべきことを先延ばしにして、後でめちゃくちゃ後悔することが少ない。' },
+  { p:'rules', q:'締切や約束を破ったことに、罪悪感をしっかり感じる方だ。' },
+];
+
+const TYPES = [
+  {
+    id:'TYPE-01', emoji:'🤖', name:'論理マシン',
+    keys:['brain','rules'],
+    color:'#4D96FF',
+    catch:'考える、正確に、ブレない。思考のCPUが人より3段階上。',
+    desc:'情報処理が速くて正確、自己管理もバッチリな「生きてる AI」タイプ。感情より論理を優先しがちで、計画通りに物事を進めるのが得意。締め切りは絶対守るし、なんなら前倒しで終わらせる。',
+    strong:['複雑な問題を素早く整理する', '感情に流されずに判断できる'],
+    weak:['「なんか雰囲気が悪い」に気づくのが遅い', '完璧主義すぎて詰まることも'],
+    errors:['🔔 感情センサーの反応が薄いため、「空気読んでない」と言われることがあります。', '⚡ 処理速度が高すぎて、他者のペースに合わせることをコストと感じがち。'],
+    compat:['TYPE-05','TYPE-07'],
+  },
+  {
+    id:'TYPE-02', emoji:'🦁', name:'パワー型',
+    keys:['stamina','drive'],
+    color:'#FF6B6B',
+    catch:'とにかく動く、最後まで動く。体力と気合で制圧。',
+    desc:'体力・行動力・やる気のトリプルコンボ。考えるより先に動く「とりあえずやってみる」精神の持ち主。多少無理なスケジュールでも根性でこなす。疲れ知らずのエネルギッシュ野郎。',
+    strong:['どんな状況でも最後まで粘れる', '「やろう！」の即断力が高い'],
+    weak:['計画より勢い重視で後から大変になる', '休むのが苦手すぎてオーバーヒートする'],
+    errors:['⚠️ 勢いで走りすぎて、後で「あれ、何やってたっけ？」になる脆弱性を検出。', '🔥 体力はあるが、回復を怠ると突然クラッシュするリスクがあります。'],
+    compat:['TYPE-01','TYPE-06'],
+  },
+  {
+    id:'TYPE-03', emoji:'🌊', name:'カメレオン',
+    keys:['flex','social'],
+    color:'#6BCB77',
+    catch:'どこにでも溶け込む。変化を楽しめる天才型。',
+    desc:'新しい環境・新しい人・新しい文化、全部ウェルカム。「知らない場所」が怖くないどころかワクワクする。人の気持ちを読む能力も高いので、初対面でもすぐ打ち解けられる。',
+    strong:['初対面でも自然に仲良くなれる', '変化への対応力が異次元'],
+    weak:['自分のコアがブレやすい', '「NO」と言えずに疲れることがある'],
+    errors:['🌀 適応力が高すぎて、自分の意見がどれだかわからなくなることがあります。', '💧 人に合わせすぎてエネルギーを消耗する「過剰出力」が検出されました。'],
+    compat:['TYPE-04','TYPE-10'],
+  },
+  {
+    id:'TYPE-04', emoji:'⚡', name:'スプリンター',
+    keys:['drive','brain'],
+    color:'#FFD93D',
+    catch:'思いついたら0.1秒で動く。閃きと初速の鬼。',
+    desc:'アイデアと行動力のコンボが最強クラス。「あ、これいける」と思ったら次の日には動き始めてる。頭の回転も速いので、チャンスを誰より早く掴む。ただし詰めが甘いことも。',
+    strong:['チャンスを見つけて即行動できる', '発想が面白くて人が集まる'],
+    weak:['最後まで走り切れないことがある', 'じっくり考えるのが苦手'],
+    errors:['💨 初速は最高だが、途中でガス欠になる「持続力不足」が観測されました。', '🌪️ 同時に複数のことを始めて全部中途半端になる「マルチ起動エラー」に要注意。'],
+    compat:['TYPE-01','TYPE-09'],
+  },
+  {
+    id:'TYPE-05', emoji:'🛡️', name:'要塞',
+    keys:['rules','stamina'],
+    color:'#FF9A3C',
+    catch:'揺るがない。ルール守って、体力で押し切る。',
+    desc:'自己管理と体力の組み合わせで「安定の鬼」。約束の時間は絶対守る、体調管理もバッチリ、締め切りは必ず守る。チームの信頼の柱になれる存在。急な変化には弱いけど、その分ブレない。',
+    strong:['誰よりも信頼できる「約束を守る人」', '長期戦で真の力を発揮する'],
+    weak:['急な変更・想定外に対応しにくい', '融通が利かないと言われることも'],
+    errors:['🔒 変化への対応が遅いため、急なピボットが必要な場面で「フリーズ」が起きます。', '📏 ルールへの忠実さが強すぎて、グレーゾーンの判断で止まることがある。'],
+    compat:['TYPE-02','TYPE-11'],
+  },
+  {
+    id:'TYPE-06', emoji:'🎭', name:'ムードメーカー',
+    keys:['social','drive'],
+    color:'#C77DFF',
+    catch:'その場を明るくするのが使命。人の心を動かす天才。',
+    desc:'コミュ力と行動力の組み合わせで、その場の雰囲気を支配する存在。「なんかこいつがいると楽しい」と言われるタイプ。人を巻き込んで物事を動かすのが得意。一人での作業は少し苦手。',
+    strong:['どんな集まりでも場を盛り上げられる', 'チームのモチベーションを上げる'],
+    weak:['一人で黙々とやる作業が続くとしんどい', '「テンション低い日」が極端に見える'],
+    errors:['🎪 外向きのエネルギー消費が多いため、一人になると急に充電が必要になります。', '📱 社交的すぎて、重要な「一人作業タスク」が後回しになる傾向あり。'],
+    compat:['TYPE-02','TYPE-12'],
+  },
+  {
+    id:'TYPE-07', emoji:'🔬', name:'研究者',
+    keys:['brain','flex'],
+    color:'#4D96FF',
+    catch:'知識欲が止まらない。常にアップデートし続ける知の探求者。',
+    desc:'頭の回転が速い上に新しいものへの好奇心も旺盛。「これどういう仕組みなの？」が口癖で、知識のインプットが趣味みたいな人。変化にも強いので、新しい分野に飛び込んでも問題なし。',
+    strong:['知識量が豊富で引き出しが多い', '「なぜ？」を突き詰める力'],
+    weak:['実際に手を動かすより「考える」を優先しがち', 'オタク的すぎて伝わらないことも'],
+    errors:['📚 インプット過多でアウトプットが追いついていない「未発進状態」を検出。', '🔭 細かいことを深掘りしすぎて、全体が見えなくなる「視野狭窄モード」に注意。'],
+    compat:['TYPE-01','TYPE-03'],
+  },
+  {
+    id:'TYPE-08', emoji:'🌟', name:'オールラウンダー',
+    keys:['brain','social'],
+    color:'#6BCB77',
+    catch:'バランスの化け物。どこに置いても機能する万能型。',
+    desc:'頭も良くてコミュ力も高い、まさに「理想の人材」。人の話を理解するのが速くて、それを上手く伝え返すことができる。チームでも個人でも機能する稀少型。',
+    strong:['どんな場面でも適切に対応できる', '「頼りになる」と言われがち'],
+    weak:['器用貧乏になって突出した得意技が薄い', '「何でもできるから」で無理させられる'],
+    errors:['⚖️ オールラウンドゆえに「とりあえずあいつに頼もう」が集中しすぎる過負荷リスクあり。', '🎯 突出した「尖り」がないため、自己アピールで損をすることがある。'],
+    compat:['TYPE-04','TYPE-06'],
+  },
+  {
+    id:'TYPE-09', emoji:'🐢', name:'堅実派',
+    keys:['rules','flex'],
+    color:'#FF9A3C',
+    catch:'急がず焦らず、でもちゃんと変われる。長期戦の勝者。',
+    desc:'自分のペースをしっかり守りながら、必要な変化にはちゃんと対応できる「現実主義のカメ」。爆発力はないが、長期的に見ると安定した成果を出し続ける。',
+    strong:['長期的な計画をちゃんと実行できる', '「無駄なことをしない」効率の達人'],
+    weak:['スピード感が必要な場面で出遅れる', '保守的すぎてチャンスを見逃すことも'],
+    errors:['🐌 慎重すぎて「もうその機会は終わりました」になることがあります。', '📅 長期スパンで動くため、短期の急タスクへの対応コストが高い。'],
+    compat:['TYPE-04','TYPE-11'],
+  },
+  {
+    id:'TYPE-10', emoji:'🎨', name:'クリエイター',
+    keys:['flex','drive'],
+    color:'#FFD93D',
+    catch:'常識を疑い、新しいものを作る。感性と行動力の合体。',
+    desc:'柔軟な思考と「やってみよう」の精神で、既存のやり方を壊して新しいものを作り出す。「普通でいい」が一番嫌いな言葉。ゼロから何かを生み出すことに燃える人。',
+    strong:['誰も思いつかなかった発想ができる', '形のないものを形にする力'],
+    weak:['管理や繰り返し作業は激しく苦手', 'ルーティンになると急にやる気が失せる'],
+    errors:['🎭 新しいことへの飽きが速すぎて、プロジェクトが「未完成コレクション」になるリスクあり。', '🌈 自由を求めるあまり、必要な制約やルールを「縛り」と感じすぎる。'],
+    compat:['TYPE-03','TYPE-08'],
+  },
+  {
+    id:'TYPE-11', emoji:'🤝', name:'縁の下',
+    keys:['social','rules'],
+    color:'#C77DFF',
+    catch:'陰ながら全部支える。「お前がいてよかった」と言われるタイプ。',
+    desc:'人の気持ちを大切にしながら、ちゃんとルールも守れる「信頼の柱」。派手さはないが、その人がいるかどうかでチーム全体の空気が変わる。縁の下の力持ち。',
+    strong:['誰も気づかないところを気にかけられる', '揉め事を穏やかに収められる'],
+    weak:['自分を後回しにしすぎてバーンアウトしやすい', '自己主張が弱くて損をすることも'],
+    errors:['❤️‍🔥 他者へのリソース配分が多すぎて「自己メンテナンス不足」が深刻です。', '🔇 自分の気持ちを言葉にするのが苦手で、ストレスを内側に溜めがち。'],
+    compat:['TYPE-05','TYPE-09'],
+  },
+  {
+    id:'TYPE-12', emoji:'🌈', name:'自由人',
+    keys:['drive','social'],
+    color:'#FF6B6B',
+    catch:'ルールより気持ち。フィーリングで生きるエネルギー体。',
+    desc:'やる気と人付き合いが武器の「感情の塊」。計画より感情、論理より直感で動く。周りを巻き込む熱量は最強クラスだが、飽きるのも速い。一緒にいると楽しい最強の仲間。',
+    strong:['熱量で人を巻き込む力が最強', '楽しいことを見つける嗅覚がある'],
+    weak:['続かない・飽きる・忘れる の三重苦', '感情が先走って後で後悔することも'],
+    errors:['🎡 テンションに引っ張られすぎて「冷静な判断」がクラッシュします。', '⏰ 楽しいことへの集中力は無限だが、そうでないことへの持続力は極めて低い。'],
+    compat:['TYPE-06','TYPE-10'],
+  },
+];
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let currentQ = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+let scores = {};
+let myType = null;
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+function init() {
+  const wrap = document.getElementById('hero-chars');
+  TYPES.slice(0,6).forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'hero-char-chip';
+    el.innerHTML = `<div class="emoji">${t.emoji}</div><div class="cname">${t.name}</div>`;
+    wrap.appendChild(el);
+  });
+}
+init();
+
+// ══════════════════════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════════════════════
+function show(id) {
+  ['page-landing','page-quiz','page-result','page-compat','page-types'].forEach(p => {
+    document.getElementById(p).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function startQuiz() {
+  answers = new Array(QUESTIONS.length).fill(null);
+  scores = {};
+  currentQ = 0;
+  show('page-quiz');
+  renderQ(0);
+}
+
+function renderQ(idx) {
+  const q = QUESTIONS[idx];
+  const param = PARAMS.find(p => p.key === q.p);
+  const pct = Math.round((idx / QUESTIONS.length) * 100);
+  document.getElementById('prog-fill').style.width = `${pct}%`;
+  document.getElementById('prog-q').textContent = `Q${idx+1} / ${QUESTIONS.length}`;
+  document.getElementById('prog-pct').textContent = `${pct}%`;
+  document.getElementById('btn-back').disabled = idx === 0;
+
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.disabled = answers[idx] === null;
+  nextBtn.classList.toggle('active', answers[idx] !== null);
+  nextBtn.textContent = idx === QUESTIONS.length - 1 ? '結果を見る 🎉' : '次の質問へ →';
+
+  const qGroup = QUESTIONS.map((q2,i) => ({...q2,i})).filter(q2=>q2.p===q.p);
+  const qIdx = qGroup.findIndex(q2=>q2.i===idx);
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="cat-header anim-in">
+      <div class="cat-emoji">${param.emoji}</div>
+      <div class="cat-info">
+        <div class="cat-name" style="color:${param.color}">${param.name}</div>
+        <div class="cat-desc">${param.desc}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-weight:800;">${qIdx+1}/4</div>
+    </div>
+    <div class="q-card anim-in" style="animation-delay:0.05s">
+      <div class="q-num">Q${idx+1}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="scale-hint">
+        <span>🥶 全然ちがう</span>
+        <span>めっちゃそれ 🔥</span>
+      </div>
+      <div class="scale-btns">
+        ${[1,2,3,4,5].map(v => {
+          const isSel = answers[idx] === v;
+          const labels = ['','😅','🤔','😊','😄','🔥'];
+          return `<button class="s-btn${isSel?' sel':''}"
+            onclick="selectA(${v})"
+            style="${isSel ? `background:${param.color};border-color:${param.color};` : ''}">
+            ${labels[v]}
+          </button>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function selectA(val) {
+  answers[currentQ] = val;
+  renderQ(currentQ);
+}
+
+function goNext() {
+  if (answers[currentQ] === null) return;
+  if (currentQ < QUESTIONS.length - 1) {
+    currentQ++;
+    renderQ(currentQ);
+  } else {
+    calcAndShow();
+  }
+}
+
+function goBack() {
+  if (currentQ > 0) { currentQ--; renderQ(currentQ); }
+}
+
+// ══════════════════════════════════════════════════════
+// CALC
+// ══════════════════════════════════════════════════════
+function calcAndShow() {
+  PARAMS.forEach(p => {
+    const qs = QUESTIONS.map((q,i)=>({...q,i})).filter(q=>q.p===p.key);
+    scores[p.key] = qs.reduce((s,q)=>s+(answers[q.i]||0),0);
+  });
+
+  const sorted = PARAMS.map(p=>({key:p.key,score:scores[p.key]})).sort((a,b)=>b.score-a.score);
+  const top2 = [sorted[0].key, sorted[1].key].sort();
+  myType = TYPES.find(t=>{
+    const k=[...t.keys].sort();
+    return k[0]===top2[0]&&k[1]===top2[1];
+  }) || TYPES.find(t=>{
+    return t.keys.includes(sorted[0].key);
+  }) || TYPES[0];
+
+  showResult();
+}
+
+// ══════════════════════════════════════════════════════
+// RESULT
+// ══════════════════════════════════════════════════════
+function showResult() {
+  const totalRaw = Object.values(scores).reduce((s,v)=>s+v,0);
+  const totalMax = PARAMS.length * 20;
+  const score = Math.round((totalRaw/totalMax)*99000+1000);
+  const rank = totalRaw>=100?'S+':totalRaw>=88?'S':totalRaw>=76?'A+':totalRaw>=64?'A':totalRaw>=52?'B+':'B';
+
+  const html = `
+    <div class="result-header anim-in">
+      <div class="result-type-label">あなたのタイプは...</div>
+      <span class="char-display anim-pop" style="animation-delay:0.2s">${myType.emoji}</span>
+      <div class="type-id">${myType.id}</div>
+      <div class="type-name">${myType.name}</div>
+      <p class="type-catch">${myType.catch}</p>
+      <div class="score-row">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px;">総合スコア</div>
+          <div class="score-num">${score.toLocaleString()}</div>
+        </div>
+        <div style="width:1px;height:36px;background:var(--border)"></div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px;">ランク</div>
+          <div class="score-rank">${rank}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="radar-section anim-in" style="animation-delay:0.1s">
+      <div class="radar-wrap">
+        <canvas id="radar-canvas" width="220" height="220"></canvas>
+      </div>
+      <div class="params-list">
+        ${PARAMS.map(p=>{
+          const pct = Math.round((scores[p.key]/20)*100);
+          return `<div class="param-item">
+            <div class="param-emoji">${p.emoji}</div>
+            <div class="param-right">
+              <div class="param-name">
+                <span style="color:${p.color}">${p.name}</span>
+                <span class="param-score" style="color:${p.color}">${pct}</span>
+              </div>
+              <div class="param-bar-bg">
+                <div class="param-bar" id="pbar-${p.key}" style="width:0%;background:${p.color}"></div>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="result-card anim-in" style="animation-delay:0.15s">
+      <div class="rc-label"><span>${myType.emoji}</span> タイプ詳細</div>
+      <div class="rc-body">${myType.desc}</div>
+      <div class="strong-weak">
+        <div class="sw-box strong">
+          <div class="sw-title">💚 つよつよポイント</div>
+          ${myType.strong.map(s=>`<div class="sw-text">・${s}</div>`).join('')}
+        </div>
+        <div class="sw-box weak">
+          <div class="sw-title">❤️ 改善の余地あり</div>
+          ${myType.weak.map(w=>`<div class="sw-text">・${w}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card anim-in" style="animation-delay:0.2s">
+      <div class="rc-label"><span>⚠️</span> エラーログ</div>
+      ${myType.errors.map(e=>`
+        <div class="error-box">
+          <div class="error-tag">WARN</div>
+          <div class="error-text">${e}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="result-card anim-in" style="animation-delay:0.25s">
+      <div class="rc-label"><span>💕</span> 相性の良いタイプ</div>
+      <div class="compat-mates">
+        ${myType.compat.map(id=>{
+          const t=TYPES.find(t=>t.id===id);
+          if(!t) return '';
+          return `<div class="compat-chip">
+            <div class="ce">${t.emoji}</div>
+            <div>
+              <div class="cn">${t.name}</div>
+              <div class="cs">${t.id}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="compat-cta" onclick="showCompatPage()">💕 他のタイプとの相性を全部チェック →</button>
+    </div>
+
+    <div class="result-actions anim-in" style="animation-delay:0.3s">
+      <button class="btn-retry2" onclick="showTypes()">📋 全タイプ一覧を見る</button>
+      <button class="btn-retry2" onclick="startQuiz()">↺ もう一度診断する</button>
+    </div>
+  `;
+
+  document.getElementById('page-result').innerHTML = html;
+  show('page-result');
+
+  setTimeout(()=>{
+    PARAMS.forEach(p=>{
+      const pct = Math.round((scores[p.key]/20)*100);
+      const bar = document.getElementById(`pbar-${p.key}`);
+      if(bar) bar.style.width=`${pct}%`;
+    });
+  }, 300);
+
+  setTimeout(()=>drawRadar(), 400);
+  launchConfetti();
+}
+
+function drawRadar() {
+  const canvas = document.getElementById('radar-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx=110, cy=110, maxR=90;
+  const n=PARAMS.length;
+  ctx.clearRect(0,0,220,220);
+
+  // Rings
+  for(let ring=1;ring<=5;ring++){
+    const r=(ring/5)*maxR;
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const a=(i/n)*Math.PI*2-Math.PI/2;
+      const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle=ring===5?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.04)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  }
+
+  // Axes
+  PARAMS.forEach((_,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+
+  // Labels
+  PARAMS.forEach((p,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const lr=maxR+22;
+    ctx.fillStyle=p.color;
+    ctx.font='bold 11px sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(p.emoji, cx+Math.cos(a)*lr, cy+Math.sin(a)*lr);
+  });
+
+  // Data
+  const pts=PARAMS.map((p,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const v=scores[p.key]/20;
+    return [cx+Math.cos(a)*maxR*v, cy+Math.sin(a)*maxR*v];
+  });
+
+  ctx.beginPath();
+  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  ctx.closePath();
+  ctx.fillStyle='rgba(77,150,255,0.15)';
+  ctx.fill();
+
+  // Gradient stroke
+  const grad=ctx.createLinearGradient(0,0,220,220);
+  grad.addColorStop(0,'#4D96FF');
+  grad.addColorStop(0.5,'#C77DFF');
+  grad.addColorStop(1,'#FF6B6B');
+  ctx.strokeStyle=grad;
+  ctx.lineWidth=2.5;
+  ctx.stroke();
+
+  // Dots
+  pts.forEach(([x,y],i)=>{
+    ctx.beginPath();
+    ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle=PARAMS[i].color;
+    ctx.fill();
+    ctx.strokeStyle='#0F0F1A';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// COMPAT PAGE
+// ══════════════════════════════════════════════════════
+function showCompatPage() {
+  if(!myType){ alert('先に診断を完了してください！'); return; }
+
+  const html = `
+    <button class="page-back" onclick="show('page-result')">← 結果に戻る</button>
+    <h2 class="compat-title">相性診断 💕</h2>
+    <p class="compat-subtitle">
+      あなた（<strong>${myType.emoji} ${myType.name}</strong>）と<br>他のタイプとの相性をチェックしよう。
+    </p>
+    <div class="compat-my-type">
+      <div class="cmt-emoji">${myType.emoji}</div>
+      <div class="cmt-info">
+        <div class="cmt-label">YOUR TYPE</div>
+        <div class="cmt-name">${myType.name} — ${myType.id}</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text3);font-weight:700;margin-bottom:12px;">相手のタイプを選んでね：</p>
+    <div class="type-grid">
+      ${TYPES.filter(t=>t.id!==myType.id).map(t=>`
+        <div class="type-select-card" id="tsc-${t.id}" onclick="selectCompatType('${t.id}')">
+          <div class="tsc-emoji">${t.emoji}</div>
+          <div class="tsc-id">${t.id}</div>
+          <div class="tsc-name">${t.name}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="compat-result-panel">
+      <div class="compat-result-panel">
+        <div class="placeholder-panel">
+          <span class="ph-emoji">👆</span>
+          <div>上からタイプを選ぶと<br>相性が表示されます</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('page-compat').innerHTML = html;
+  show('page-compat');
+}
+
+function selectCompatType(id) {
+  document.querySelectorAll('.type-select-card').forEach(el=>el.classList.remove('picked'));
+  const card = document.getElementById(`tsc-${id}`);
+  if(card) card.classList.add('picked');
+
+  const other = TYPES.find(t=>t.id===id);
+  if(!other) return;
+
+  // Calc compat
+  let pct = 50;
+  const notes = [];
+  const tags = [];
+
+  if(myType.compat.includes(id)){ pct+=22; notes.push('お互いの強みが自然に補い合える最高の組み合わせ。一緒にいると「なぜかうまくいく」不思議な相性。'); tags.push({text:'⭐ ベスト相性', color:'#FFD93D'}); }
+  if(other.compat.includes(myType.id) && !myType.compat.includes(id)){ pct+=12; notes.push('相手側もあなたとの相性を高く評価するタイプ。お互い引き寄せ合う引力がある。'); }
+
+  const overlap = myType.keys.filter(k=>other.keys.includes(k));
+  if(overlap.length===2){ pct-=15; notes.push('似たもの同士すぎて、同じ弱点を共有している。楽しいけど、同じ失敗を一緒にやらかすリスクあり。'); tags.push({text:'⚠️ 共倒れ注意', color:'#FF6B6B'}); }
+  else if(overlap.length===0){ pct+=8; notes.push('タイプが正反対で最初はかみ合わないことも。でもそれぞれの欠点を補い合える可能性が高い。'); tags.push({text:'🔄 凸凹コンビ', color:'#6BCB77'}); }
+
+  if(id===myType.id){ pct=75; notes.length=0; notes.push('同じタイプ同士。価値観が似ているので最初から話が合う。ただし同じ弱点を持っているので注意。'); tags.length=0; tags.push({text:'🪞 ミラータイプ', color:'#C77DFF'}); }
+
+  pct = Math.max(15, Math.min(97, pct));
+
+  const pctColor = pct>=80?'#6BCB77':pct>=60?'#FFD93D':pct>=40?'#FF9A3C':'#FF6B6B';
+  const pctLabel = pct>=80?'めちゃくちゃ相性◎':pct>=65?'かなり良さそう':pct>=50?'まずまず':pct>=35?'ちょっと難しいかも':'かなり骨が折れる';
+
+  // Param comparison bars
+  const compBars = PARAMS.map(p=>{
+    const myScore = scores[p.key]||0;
+    const myPct = Math.round((myScore/20)*100);
+    const diff = myType.keys.includes(p.key)?1:0;
+    const otherPct = other.keys.includes(p.key)?85:35;
+    const dots = [1,2,3,4,5].map(d=>d<=Math.round(myPct/20)?'lit':'');
+    return `<div class="cp-bar-row">
+      <div class="cp-bar-l">${p.emoji} ${myPct}%</div>
+      <div class="cp-bar-center">
+        ${dots.map(d=>`<div class="cp-dot ${d}"></div>`).join('')}
+      </div>
+      <div class="cp-bar-r">${otherPct}% ${p.emoji}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('compat-result-panel').innerHTML = `
+    <div class="compat-result-panel anim-in">
+      <div class="cp-vs">
+        <div class="cp-char">
+          <span class="em">${myType.emoji}</span>
+          <div class="nm">${myType.name}</div>
+        </div>
+        <div class="cp-vs-text">VS</div>
+        <div class="cp-char">
+          <span class="em">${other.emoji}</span>
+          <div class="nm">${other.name}</div>
+        </div>
+      </div>
+      <div class="cp-score-display">
+        <div class="cp-pct" style="color:${pctColor}">${pct}%</div>
+        <div class="cp-label">${pctLabel}</div>
+        <div class="cp-tags">
+          ${tags.map(t=>`<span class="cp-tag" style="background:${t.color}22;color:${t.color};border:1px solid ${t.color}44">${t.text}</span>`).join('')}
+        </div>
+      </div>
+      <div class="cp-bars">${compBars}</div>
+      <div class="cp-comment">${notes.join('<br><br>')}</div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════
+// TYPE LIST PAGE
+// ══════════════════════════════════════════════════════
+function showTypes() {
+  const html = `
+    <button class="page-back" onclick="show('page-result')">← 結果に戻る</button>
+    <h2 style="font-size:24px;font-weight:900;margin-bottom:8px;">全タイプ一覧 📋</h2>
+    <p style="font-size:14px;color:var(--text2)">あなたのタイプ：<strong style="color:#4D96FF">${myType?myType.name:'未診断'}</strong></p>
+    <div class="types-grid">
+      ${TYPES.map(t=>`
+        <div class="type-card-full ${myType&&t.id===myType.id?'mine':''}" onclick="showTypeDetail('${t.id}')">
+          <span class="tcf-emoji">${t.emoji}</span>
+          <div class="tcf-id">${t.id}</div>
+          <div class="tcf-name">${t.name}</div>
+          <div class="tcf-catch">${t.catch}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:24px;text-align:center;">
+      <button class="btn-retry2" onclick="show('page-result')">← 結果に戻る</button>
+    </div>
+  `;
+  document.getElementById('page-types').innerHTML = html;
+  show('page-types');
+}
+
+function showTypeDetail(id) {
+  const t = TYPES.find(t=>t.id===id);
+  if(!t) return;
+  const isMine = myType && myType.id === id;
+  const html = `
+    <button class="page-back" onclick="showTypes()">← タイプ一覧に戻る</button>
+    <div style="text-align:center;margin-bottom:32px;" class="anim-in">
+      <span style="font-size:80px;display:block;margin-bottom:12px;">${t.emoji}</span>
+      <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:0.15em;margin-bottom:6px;">${t.id}${isMine?' 👈 あなた':''}</div>
+      <div style="font-size:26px;font-weight:900;margin-bottom:8px;">${t.name}</div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto">${t.catch}</p>
+    </div>
+    <div class="result-card anim-in">
+      <div class="rc-label"><span>${t.emoji}</span> このタイプについて</div>
+      <div class="rc-body">${t.desc}</div>
+      <div class="strong-weak">
+        <div class="sw-box strong">
+          <div class="sw-title">💚 つよつよポイント</div>
+          ${t.strong.map(s=>`<div class="sw-text">・${s}</div>`).join('')}
+        </div>
+        <div class="sw-box weak">
+          <div class="sw-title">❤️ 改善の余地あり</div>
+          ${t.weak.map(w=>`<div class="sw-text">・${w}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="result-card anim-in" style="animation-delay:0.1s">
+      <div class="rc-label"><span>💕</span> 相性の良いタイプ</div>
+      <div class="compat-mates">
+        ${t.compat.map(cid=>{
+          const ct=TYPES.find(x=>x.id===cid);
+          if(!ct) return '';
+          return `<div class="compat-chip" onclick="showTypeDetail('${cid}')" style="cursor:pointer">
+            <div class="ce">${ct.emoji}</div>
+            <div><div class="cn">${ct.name}</div><div class="cs">${ct.id}</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div style="margin-top:20px;">
+      <button class="btn-retry2" onclick="showTypes()">← 一覧に戻る</button>
+    </div>
+  `;
+  document.getElementById('page-types').innerHTML = html;
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════════════════
+function launchConfetti() {
+  const wrap = document.getElementById('confetti');
+  wrap.style.display = 'block';
+  wrap.innerHTML = '';
+  const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF9A3C'];
+  for(let i=0;i<60;i++){
+    const el = document.createElement('div');
+    el.className = 'conf';
+    el.style.cssText = `
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px;
+      height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${2+Math.random()*2}s;
+      animation-delay:${Math.random()*0.8}s;
+    `;
+    wrap.appendChild(el);
+  }
+  setTimeout(()=>{ wrap.style.display='none'; }, 4000);
+}
+</script>
+</body>
+</html>
